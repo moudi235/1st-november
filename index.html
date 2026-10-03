@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>The 72nd anniversary of the outbreak of the Algerian Revolution</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+body {
+  margin: 0;
+  font-family: 'Cairo', Arial;
+  background-image: url('background.jpg');
+  background-size: 100% auto;
+  background-position: top center;
+  background-repeat: no-repeat;
+  background-color: #edeff1;
+  color: #000;
+}
+
+/* خلفية زخرفية */
+.bg-pattern{
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(255,215,0,.08), transparent 40%),
+    radial-gradient(circle at 80% 70%, rgba(255,215,0,.06), transparent 40%);
+  pointer-events:none;
+}
+
+/* فوانيس */
+.lantern{
+  position:fixed;
+  top:-60px;
+  width:40px;
+  opacity:.5;
+  animation:float 12s linear infinite;
+  pointer-events:none;
+  z-index:0;
+}
+.l1{ left:10%; animation-delay:0s; }
+.l2{ left:30%; animation-delay:3s; }
+.l3{ left:50%; animation-delay:2s; }
+.l4{ left:70%; animation-delay:4s; }
+.l5{ left:90%; animation-delay:1s; }
+@keyframes float{
+  0%{ transform:translateY(0); }
+  100%{ transform:translateY(120vh); }
+}
+
+/* الحاوية */
+.container{
+  max-width:480px;
+  margin:40px auto;
+  padding:20px;
+}
+
+/* البطاقة */
+.card{
+  background:rgb(255,255,255,0.8);
+  border-radius:20px;
+  padding:28px;
+  box-shadow:0 20px 60px rgba(0,0,0,.2);
+}
+
+/* العنوان */
+.title{
+  text-align:center;
+  margin:10px 0 5px;
+  font-size:26px;
+  font-weight:700;
+}
+
+.subtitle{
+  text-align:center;
+  opacity:.8;
+  margin-bottom:18px;
+}
+
+/* صورة الإفطار */
+.hero{
+  width:100px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* الحالة */
+.status{
+  text-align:center;
+  font-weight:600;
+  margin:10px 0 16px;
+  color:#ff8c00;
+}
+
+/* الحقول */
+input{
+  width:100%;
+  padding:13px;
+  margin:6px 0;
+  border-radius:10px;
+  border:1px solid #ccc;
+  font-size:15px;
+  box-sizing: border-box;
+}
+
+/* الزر */
+button{
+  width:100%;
+  padding:12px 25px;
+  margin-top:10px;
+  border-radius:10px;
+  border:none;
+  background: linear-gradient(135deg, #09dc0d, #f8031c, #ffffff); 
+  color:#000;
+  font-weight:bold;
+  font-size:16px;
+  cursor:pointer;
+  transition: all 0.3s ease; 
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+button:hover{
+  transform:translateY(-1px);
+}
+
+/* زر اللغة */
+.lang{
+  background:transparent;
+  color:#000;
+  border:1px solid rgba(0,0,0,.25);
+  margin-bottom:10px;
+}
+
+/* رسالة النجاح */
+.message{
+  text-align:center;
+  margin-top:12px;
+  font-weight:600;
+}
+
+/* note  */
+.note {
+    color: red;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+  <!-- Lanterns -->
+  <img src="lantern.png" class="lantern l1">
+  <img src="lantern.png" class="lantern l2">
+  <img src="lantern.png" class="lantern l3">
+  <img src="lantern.png" class="lantern l4">
+  <img src="lantern.png" class="lantern l5">
+<div class="bg-pattern"></div>
+
+<div class="container">
+  <div class="card">
+    <img src="logo.png" class="hero" alt="Iftar">
+    
+    <div class="title" id="title">The 72nd anniversary of the outbreak of the Algerian Revolution</div>
+    
+    <!--button class="lang" onclick="toggleLang()">🌐 عربي / English</button>-->
+
+    <div class="title" id="title">
+    <span class="note">Note:</span>
+    <br>
+    Maximum 1 guests per registration, subject to space availability.<br>
+    </div>
+
+    <div id="status" class="status">Loading...</div>
+
+    <form id="form">
+      <input id="firstName" required placeholder="First Name">
+      <input id="lastName" required placeholder="Last Name">
+      <input id="email" type="email" required placeholder="Email">
+      <input id="phone" required placeholder="Phone">
+      <input id="guest1First" placeholder="Guest 1 Full name (optional)">
+      <button type="submit" id="submitBtn">Register</button>
+    </form>
+
+    <div id="message" class="message"></div>
+  </div>
+</div>
+
+<script>
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyA4Oe3V045ruwCnNmD_CbNkSLgBANVHNio",
+  authDomain: "st-november.firebaseapp.com",
+  projectId: "st-november",
+  storageBucket: "st-november.firebasestorage.app",
+  messagingSenderId: "349524542473",
+  appId: "1:349524542473:web:49a0a8eb265b9444fb64d8"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Limits
+const MAX_MAIN = 2;
+const MAX_TOTAL = 3;
+
+let currentCount = 0;
+let isArabic = false;
+
+// Elements
+const form = document.getElementById("form");
+const status = document.getElementById("status");
+const message = document.getElementById("message");
+
+const title = document.getElementById("title");
+const subtitle = document.getElementById("subtitle");
+
+const firstName = document.getElementById("firstName");
+const lastName = document.getElementById("lastName");
+const email = document.getElementById("email");
+const phone = document.getElementById("phone");
+
+const guest1El = document.getElementById("guest1First");
+const submitBtn = document.getElementById("submitBtn");
+
+
+// =========================
+// Language
+// =========================
+
+function toggleLang() {
+  isArabic = !isArabic;
+  applyLang();
+}
+
+function applyLang() {
+
+  if (isArabic) {
+
+    document.documentElement.lang = "ar";
+
+    title.textContent =
+      "الذكرى الثانية والسبعين لاندلاع الثورة الجزائرية";
+
+    subtitle.textContent =
+      "الذكرى الثانية والسبعين لاندلاع الثورة الجزائرية";
+
+    firstName.placeholder = "الاسم";
+    lastName.placeholder = "اللقب";
+    email.placeholder = "البريد الإلكتروني";
+    phone.placeholder = "رقم الهاتف";
+
+    guest1El.placeholder = "ضيف 1 (اختياري)";
+
+    submitBtn.textContent = "تسجيل";
+
+  } else {
+
+    document.documentElement.lang = "en";
+
+    title.textContent =
+      "The 72nd anniversary of the outbreak of the Algerian Revolution";
+
+    subtitle.textContent =
+      "The 72nd anniversary of the outbreak of the Algerian Revolution";
+
+    firstName.placeholder = "First Name";
+    lastName.placeholder = "Last Name";
+    email.placeholder = "Email";
+    phone.placeholder = "Phone";
+
+    guest1El.placeholder =
+      "Guest 1 Full name (optional)";
+
+    submitBtn.textContent = "Register";
+  }
+
+  updateStatus();
+}
+
+
+// =========================
+// Load current count
+// =========================
+
+async function loadCount() {
+
+  try {
+
+    const snap = await db
+      .collection("registrations")
+      .get();
+
+    currentCount = 0;
+
+    snap.forEach(doc => {
+
+      currentCount++; // Main person
+
+      const data = doc.data();
+
+      // Guest 1
+      if (data.guest1 && data.guest1.trim() !== "") {
+        currentCount++;
+      }
+
+    });
+
+    updateStatus();
+
+  } catch (error) {
+
+    console.error("Error loading registrations:", error);
+
+  }
+}
+
+loadCount();
+
+
+// =========================
+// Update status
+// =========================
+
+function updateStatus() {
+
+  if (currentCount >= MAX_TOTAL) {
+
+    status.textContent = isArabic
+      ? "❌ تم إغلاق التسجيل. عذرًا، لقد وصلنا إلى الحد الأقصى من المشاركين"
+      : "❌ Registration closed. Sorry! We reached the maximum number of people.";
+
+    form.style.display = "none";
+
+  } else {
+
+    status.textContent = "";
+
+    form.style.display = "block";
+  }
+}
+
+
+// =========================
+// Submit form
+// =========================
+
+form.addEventListener("submit", async e => {
+
+  e.preventDefault();
+
+  // Check if already full
+  if (currentCount >= MAX_TOTAL) {
+    return;
+  }
+
+  const emailVal = email.value.trim();
+  const guest1 = guest1El.value.trim();
+
+
+  // =========================
+  // Check duplicate email
+  // =========================
+
+  const dup = await db
+    .collection("registrations")
+    .where("email", "==", emailVal)
+    .get();
+
+  if (!dup.empty) {
+
+    message.textContent = isArabic
+      ? "⚠️ هذا الإيميل مسجل مسبقاً"
+      : "⚠️ Email already registered";
+
+    return;
+  }
+
+
+  // =========================
+  // Calculate new people
+  // =========================
+
+  let newCount = 1;
+
+  if (guest1 !== "") {
+    newCount++;
+  }
+
+
+  // =========================
+  // Check available space
+  // =========================
+
+  if (currentCount + newCount > MAX_TOTAL) {
+
+    message.textContent = isArabic
+      ? "❌ لم يتبقَ سوى مكان واحد. يرجى التسجيل بدون ضيف."
+      : "❌ Only 1 spot remains. Please register without a guest";
+
+    return;
+  }
+
+
+  // =========================
+  // Save to Firebase
+  // =========================
+
+  try {
+
+    await db
+      .collection("registrations")
+      .add({
+
+        firstName: firstName.value.trim(),
+        lastName: lastName.value.trim(),
+        email: emailVal,
+        phone: phone.value.trim(),
+
+        guest1: guest1,
+
+        type: "pending",
+
+        time: new Date()
+      });
+
+
+    // Update local count
+    currentCount += newCount;
+
+
+    // =========================
+    // SUCCESS MESSAGE
+    // =========================
+
+    message.textContent = isArabic
+      ? "✅ تم استلام طلبك. سيتم تأكيد مكانك وتزويدك بموقع الإفطار عبر البريد أو الهاتف"
+      : "✅ Registration received. We will confirm your place and provide the Iftar location via email or phone.";
+
+
+    // Reset form
+    form.reset();
+
+
+    /*
+      IMPORTANT:
+      لا نستدعي updateStatus() هنا.
+      
+      لأن آخر تسجيل يجب أن يرى رسالة النجاح،
+      وليس رسالة Registration closed.
+    */
+
+
+  } catch (error) {
+
+    console.error("Error adding registration:", error);
+
+    message.textContent = isArabic
+      ? "❌ حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى."
+      : "❌ An error occurred during registration. Please try again.";
+  }
+
+});
+</script>
+</body>
+
+</html>
+
+
+
+
+
