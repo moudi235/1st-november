@@ -174,6 +174,7 @@ button:hover{
 <div class="container">
   <div class="card">
     <img src="logo.png" class="hero" alt="Iftar">
+    <div class="title" id="title">الذكرى الثانية والسبعين لاندلاع الثورة الجزائرية</div>
     <div class="title" id="title">The 72nd anniversary of the outbreak of the Algerian Revolution</div>
     <!--button class="lang" onclick="toggleLang()">🌐 عربي / English</button>-->
     <div class="title" id="title">
@@ -209,8 +210,8 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // Limits
-const MAX_MAIN = 2;
-const MAX_TOTAL = 3;
+const MAX_MAIN = 150;
+const MAX_TOTAL = 150;
 
 let currentCount = 0;
 let isArabic = false;
@@ -336,7 +337,7 @@ function updateStatus() {
 
     status.textContent = isArabic
       ? "❌ تم إغلاق التسجيل. عذرًا، لقد وصلنا إلى الحد الأقصى من المشاركين"
-      : "❌ Registration closed. Sorry! We reached the maximum number of people.";
+      : "❌ Registration closed. We’ve reached capacity. Please check back later if more spots become available.";
 
     form.style.display = "none";
 
@@ -442,13 +443,11 @@ form.addEventListener("submit", async e => {
     // =========================
 
     message.textContent = isArabic
-      ? "✅ تم استلام طلبك. سيتم تأكيد مكانك وتزويدك بموقع الإفطار عبر البريد أو الهاتف"
-      : "✅ Registration received. We will confirm your place and provide the Iftar location via email or phone.";
-
+      ? "✅ تم استلام طلبك. سيتم تأكيد مكانك وتزويدك بموقع الإفطار عبر البريد الإلكتروني"
+      : "✅ Registration received. We will confirm your place and send the location details by email.";
 
     // Reset form
     form.reset();
-
 
     /*
       IMPORTANT:
@@ -473,8 +472,3 @@ form.addEventListener("submit", async e => {
 </body>
 
 </html>
-
-
-
-
-
